@@ -3,7 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>마트 장보기 계산기</title>
+    <title>마트 장보기</title>
+    
+    <link rel="apple-touch-icon" href="https://img.icons8.com/fluent/180/shopping-cart.png">
+    <link rel="icon" href="https://img.icons8.com/fluent/180/shopping-cart.png">
+    
     <style>
         :root {
             --primary-color: #4CAF50;
@@ -245,12 +249,10 @@
             saveData();
         }
 
-        // 팝업 없이 즉시 초기화하는 함수
         function resetAllCounts() {
             const hasCheckedItems = items.some(item => item.count > 0);
             if (!hasCheckedItems) return;
 
-            // 알림 창 없이 바로 0으로 초기화
             items = items.map(item => ({ ...item, count: 0 }));
             render();
         }
