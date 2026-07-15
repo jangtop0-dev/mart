@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>마트 장보기 계산기</title>
+    <style>
+        :root {
+            --primary-color: #4CAF50;
+            --danger-color: #f44336;
+            --warning-color: #ff9800;
+            --bg-color: #f9f9f9;
+        }
+        * { box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+        body { margin: 0; padding: 15px; background-color: var(--bg-color); color: #333; padding-bottom: 120px; }
+        
+        h2 { text-align: center; margin: 10px 0 20px 0; font-size: 1.4rem; color: #111; }
+        
+        /* 고정 하단바 (합계 금액 표시) */
+        .total-bar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: white;
+            padding: 15px 20px;
+            box-shadow: 0 -3px 10px rgba(0,0,0,0.1);
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+            z-index: 100;
+        }
+        .total-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .total-label { font-size: 1.1rem; font-weight: bold; }
+        .total-amount { font-size: 1.6rem; font-weight: 800; color: var(--primary-color); }
+        .budget-warning {
+            display: none;
+            text-align: center;
+            font-size: 0.9rem;
+            font-weight: bold;
+            color: white;
+            background-color: var(--danger-color);
+            padding: 6px;
+            border-radius: 5px;
+            margin-top: 5px;
+            animation: blink 1s infinite alternate;
+        }
+        @keyframes blink {
+            from { opacity: 0.8; }
+            to { opacity: 1; }
+        }
+        
+        /* 상품 등록 폼 */
+        .add-form {
+            background: white;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+        .form-row { display: flex; gap: 8px; margin-bottom: 8px; }
+        .form-row input {
+            flex: 1;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 1rem;
+            outline: none;
+        }
+        .form-row input:focus { border-color: var(--primary-color); }
+        .add-btn {
+            width: 100%;
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 12px;
+            font-size: 1rem;
+            font-weight: bold;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+        
+        /* 상품 리스트 */
+        .item-list { display: flex; flex-direction: column; gap: 10px; }
+        .item-card {
+            background: white;
+            padding: 12px 15px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+            transition: background-color 0.2s;
+        }
+        .item-card.checked {
+            background-color: #e8f5e9;
+            border-left: 4px solid var(--primary-color);
+        }
+        .item-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex: 1;
+            cursor: pointer;
+        }
+        /* 터치하기 편한 큰 체크박스 */
+        .custom-checkbox {
+            width: 26px;
+            height: 26px;
+            border: 2px solid #ccc;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: white;
+            transition: 0.1s;
+        }
+        .item-card.checked .custom-checkbox {
+            background-color: var(--primary-color);
+            border-color: var(--primary-color);
+        }
+        .item-card.checked .custom-checkbox::after {
+            content: "✓";
+            font-size: 16px;
+        }
+        .item-info { display: flex; flex-direction: column; }
+        .item-name { font-size: 1.1rem; font-weight: 600; }
+        .item-price { font-size: 0.95rem; color: #666; margin-top: 2px; }
+        
+        /* 액션 버튼 (수정, 삭제) */
+        .item-actions { display: flex; gap: 5px; }
+        .action-btn {
+            border: none;
+            padding: 8px 12px;
+            font-size: 0.85rem;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        .edit-btn { background-color: #eaeaea; color: #444; }
+        .delete-btn { background-color: #ffebee; color: var(--danger-color); }
+    </style>
+</head>
+<body>
+
+    <h2>🛒 스마트 장보기 계산기</h2>
+
+    <!-- 상품 등록 구역 -->
+    <div class="add-form">
+        <div class="form-row">
+            <input type="text" id="itemName" placeholder="상품명 (예: 우유)" autocomplete="off">
+            <input type="number" id="itemPrice" placeholder="가격 (원)" pattern="[0-9]*" inputmode="numeric">
+        </div>
+        <button class="add-btn" onclick="addItem()">상품 등록하기</button>
+    </div>
+
+    <!-- 상품 리스트 구역 -->
+    <div class="item-list" id="itemList"></div>
+
+    <!-- 하단 고정 합계 창 -->
+    <div class="total-bar">
+        <div class="total-info">
+            <span class="total-label">선택한 합계:</span>
+            <span class="total-amount" id="totalAmount">0원</span>
+        </div>
+        <div class="budget-warning" id="budgetWarning">⚠️ 2만 원 초과! 물건을 조정해주세요!</div>
+    </div>
+
+    <script>
+        // 기본 상품 예시 데이터 (처음 실행 시 표시됨)
+        const defaultItems = [
+            { id: 1, name: "우유 1L", price: 2900, checked: false },
+            { id: 2, name: "계란 1판", price: 6900, checked: false },
+            { id: 3, name: "두부 1모", price: 1800, checked: false },
+            { id: 4, name: "사과 1봉지", price: 8500, checked: false }
+        ];
+
+        // 로컬스토리지에서 데이터를 읽어오거나 없으면 기본 데이터 사용
+        let items = JSON.parse(localStorage.getItem('grocery_items')) || defaultItems;
+
+        // 화면 그리기
+        function render() {
+            const itemList = document.getElementById('itemList');
+            itemList.innerHTML = '';
+
+            items.forEach(item => {
+                const card = document.createElement('div');
+                card.className = `item-card ${item.checked ? 'checked' : ''}`;
+                
+                card.innerHTML = `
+                    <div class="item-left" onclick="toggleCheck(${item.id})">
+                        <div class="custom-checkbox"></div>
+                        <div class="item-info">
+                            <span class="item-name">${item.name}</span>
+                            <span class="item-price">${item.price.toLocaleString()}원</span>
+                        </div>
+                    </div>
+                    <div class="item-actions">
+                        <button class="action-btn edit-btn" onclick="editItem(${item.id})">수정</button>
+                        <button class="action-btn delete-btn" onclick="deleteItem(${item.id})">삭제</button>
+                    </div>
+                `;
+                itemList.appendChild(card);
+            });
+
+            calculateTotal();
+            saveData();
+        }
+
+        // 체크 상태 토글
+        function toggleCheck(id) {
+            items = items.map(item => {
+                if (item.id === id) {
+                    return { ...item, checked: !item.checked };
+                }
+                return item;
+            });
+            render();
+        }
+
+        // 상품 등록
+        function addItem() {
+            const nameInput = document.getElementById('itemName');
+            const priceInput = document.getElementById('itemPrice');
+            const name = nameInput.value.trim();
+            const price = parseInt(priceInput.value);
+
+            if (!name) {
+                alert('상품명을 입력해주세요.');
+                return;
+            }
+            if (isNaN(price) || price < 0) {
+                alert('올바른 가격을 입력해주세요.');
+                return;
+            }
+
+            const newItem = {
+                id: Date.now(), // 고유 ID 생성
+                name: name,
+                price: price,
+                checked: false
+            };
+
+            items.push(newItem);
+            nameInput.value = '';
+            priceInput.value = '';
+            render();
+        }
+
+        // 상품 가격 및 이름 수정
+        function editItem(id) {
+            const item = items.find(i => i.id === id);
+            if (!item) return;
+
+            const newName = prompt('상품 이름을 수정하세요:', item.name);
+            if (newName === null) return; // 취소 클릭 시
+
+            const newPriceStr = prompt('가격을 수정하세요 (숫자만 입력):', item.price);
+            if (newPriceStr === null) return;
+
+            const newPrice = parseInt(newPriceStr);
+            if (isNaN(newPrice) || newPrice < 0) {
+                alert('올바른 가격을 입력해주세요.');
+                return;
+            }
+
+            item.name = newName.trim() || item.name;
+            item.price = newPrice;
+            render();
+        }
+
+        // 상품 삭제
+        function deleteItem(id) {
+            if (confirm('이 상품을 삭제하시겠습니까?')) {
+                items = items.filter(item => item.id !== id);
+                render();
+            }
+        }
+
+        // 합계 계산 및 2만원 제한 감지
+        function calculateTotal() {
+            const total = items
+                .filter(item => item.checked)
+                .reduce((sum, item) => sum + item.price, 0);
+
+            const totalAmountEl = document.getElementById('totalAmount');
+            const warningEl = document.getElementById('budgetWarning');
+
+            totalAmountEl.textContent = `${total.toLocaleString()}원`;
+
+            // 20,000원 기준값 처리
+            if (total > 20000) {
+                totalAmountEl.style.color = 'var(--danger-color)';
+                warningEl.style.display = 'block';
+            } else {
+                totalAmountEl.style.color = 'var(--primary-color)';
+                warningEl.style.display = 'none';
+            }
+        }
+
+        // 브라우저 내부(LocalStorage)에 데이터 반영구 저장
+        function saveData() {
+            localStorage.setItem('grocery_items', JSON.stringify(items));
+        }
+
+        // 첫 페이지 로드 시 실행
+        render();
+    </script>
+</body>
+</html>
