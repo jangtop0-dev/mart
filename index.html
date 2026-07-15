@@ -24,10 +24,9 @@
             margin-bottom: 15px;
             box-shadow: 0 2px 5px rgba(0,0,0,0.05);
         }
-        /* 입력란 절반씩 배치 */
         .form-row { display: flex; gap: 8px; margin-bottom: 8px; }
         .form-row input {
-            width: 50%; /* 반반씩 할당 */
+            width: 50%;
             padding: 12px;
             border: 1px solid #ddd;
             border-radius: 6px;
@@ -47,7 +46,7 @@
             cursor: pointer;
         }
         
-        /* 등록 버튼 바로 밑으로 이동한 합계 표시창 */
+        /* 합계 표시창 */
         .total-area {
             background: white;
             padding: 15px;
@@ -63,6 +62,31 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
+        }
+        .total-left {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        /* 초기화 (C) 버튼 디자인 */
+        .reset-btn {
+            background-color: var(--danger-color);
+            color: white;
+            border: none;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            user-select: none;
+        }
+        .reset-btn:active {
+            background-color: #d32f2f;
         }
         .total-label { font-size: 1.1rem; font-weight: bold; }
         .total-amount { font-size: 1.5rem; font-weight: 800; color: var(--primary-color); }
@@ -95,7 +119,6 @@
             box-shadow: 0 1px 4px rgba(0,0,0,0.05);
             transition: background-color 0.2s;
         }
-        /* 구매 중인 상품 (수량이 1 이상인 카드) */
         .item-card.active {
             background-color: #e8f5e9;
             border-left: 4px solid var(--primary-color);
@@ -134,7 +157,7 @@
         .item-name { font-size: 1.05rem; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .item-price { font-size: 0.9rem; color: #666; margin-top: 2px; }
         
-        /* 수정/삭제 버튼 공간 */
+        /* 수정/삭제 버튼 */
         .item-actions { display: flex; gap: 4px; }
         .action-btn {
             border: none;
@@ -152,7 +175,6 @@
 
     <h2>🛒 스마트 장보기 계산기</h2>
 
-    <!-- 상품 등록 구역 -->
     <div class="add-form">
         <div class="form-row">
             <input type="text" id="itemName" placeholder="상품명 (예: 우유)" autocomplete="off">
@@ -161,20 +183,20 @@
         <button class="add-btn" onclick="addItem()">상품 등록하기</button>
     </div>
 
-    <!-- 등록 버튼 바로 밑으로 올라온 합계 금액 창 -->
     <div class="total-area">
         <div class="total-info">
-            <span class="total-label">선택한 합계:</span>
+            <div class="total-left">
+                <button class="reset-btn" onclick="resetAllCounts()">C</button>
+                <span class="total-label">선택한 합계:</span>
+            </div>
             <span class="total-amount" id="totalAmount">0원</span>
         </div>
         <div class="budget-warning" id="budgetWarning">⚠️ 2만 원 초과! 물건을 조정해주세요!</div>
     </div>
 
-    <!-- 상품 리스트 구역 -->
     <div class="item-list" id="itemList"></div>
 
     <script>
-        // 기본 예시 데이터 (처음 시작 시)
         const defaultItems = [
             { id: 1, name: "우유 1L", price: 2900, count: 0 },
             { id: 2, name: "계란 1판", price: 6900, count: 0 },
@@ -182,7 +204,6 @@
             { id: 4, name: "사과 1봉지", price: 8500, count: 0 }
         ];
 
-        // 로컬스토리지 복구 시 구버전 checked 속성이 있으면 count: 0 으로 보정
         let rawItems = JSON.parse(localStorage.getItem('grocery_items')) || defaultItems;
         let items = rawItems.map(item => {
             if (item.count === undefined) {
@@ -192,31 +213,26 @@
             return item;
         });
 
-        // 화면 갱신
         function render() {
             const itemList = document.getElementById('itemList');
             itemList.innerHTML = '';
 
             items.forEach(item => {
                 const card = document.createElement('div');
-                // 수량이 1 이상이면 active 클래스 적용하여 연초록색으로 표시
                 card.className = `item-card ${item.count > 0 ? 'active' : ''}`;
                 
                 card.innerHTML = `
-                    <!-- 수량 조절기 -->
                     <div class="quantity-controller">
                         <div class="qty-btn" onclick="changeCount(${item.id}, -1)">-</div>
                         <div class="qty-val">${item.count}</div>
                         <div class="qty-btn" onclick="changeCount(${item.id}, 1)">+</div>
                     </div>
                     
-                    <!-- 상품명 & 가격 -->
                     <div class="item-info">
                         <span class="item-name">${item.name}</span>
                         <span class="item-price">${item.price.toLocaleString()}원</span>
                     </div>
                     
-                    <!-- 관리 버튼 -->
                     <div class="item-actions">
                         <button class="action-btn edit-btn" onclick="editItem(${item.id})">수정</button>
                         <button class="action-btn delete-btn" onclick="deleteItem(${item.id})">삭제</button>
@@ -229,12 +245,21 @@
             saveData();
         }
 
-        // 수량 증감 기능 (+ / -)
+        // 팝업 없이 즉시 초기화하는 함수
+        function resetAllCounts() {
+            const hasCheckedItems = items.some(item => item.count > 0);
+            if (!hasCheckedItems) return;
+
+            // 알림 창 없이 바로 0으로 초기화
+            items = items.map(item => ({ ...item, count: 0 }));
+            render();
+        }
+
         function changeCount(id, delta) {
             items = items.map(item => {
                 if (item.id === id) {
                     let newCount = item.count + delta;
-                    if (newCount < 0) newCount = 0; // 0 미만으로 내려가지 않음
+                    if (newCount < 0) newCount = 0;
                     return { ...item, count: newCount };
                 }
                 return item;
@@ -242,7 +267,6 @@
             render();
         }
 
-        // 새 상품 추가
         function addItem() {
             const nameInput = document.getElementById('itemName');
             const priceInput = document.getElementById('itemPrice');
@@ -262,7 +286,7 @@
                 id: Date.now(),
                 name: name,
                 price: price,
-                count: 0 // 최초 등록 시 기본 수량 0
+                count: 0
             };
 
             items.push(newItem);
@@ -271,7 +295,6 @@
             render();
         }
 
-        // 가격 및 상품명 변경
         function editItem(id) {
             const item = items.find(i => i.id === id);
             if (!item) return;
@@ -293,7 +316,6 @@
             render();
         }
 
-        // 리스트에서 상품 완전히 삭제
         function deleteItem(id) {
             if (confirm('이 상품을 삭제하시겠습니까?')) {
                 items = items.filter(item => item.id !== id);
@@ -301,7 +323,6 @@
             }
         }
 
-        // 개별 수량을 곱하여 합계 구하고 예산 2만 원 감지
         function calculateTotal() {
             const total = items.reduce((sum, item) => sum + (item.price * item.count), 0);
 
@@ -319,12 +340,10 @@
             }
         }
 
-        // 로컬 브라우저 저장
         function saveData() {
             localStorage.setItem('grocery_items', JSON.stringify(items));
         }
 
-        // 앱 실행
         render();
     </script>
 </body>
