@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>마트 장보기</title>
     
+    <!-- 스마트폰 홈 화면 추가 시 예쁜 카트 아이콘으로 보이게 설정 -->
     <link rel="apple-touch-icon" href="https://img.icons8.com/fluent/180/shopping-cart.png">
     <link rel="icon" href="https://img.icons8.com/fluent/180/shopping-cart.png">
     
@@ -179,6 +180,7 @@
 
     <h2>🛒 스마트 장보기 계산기</h2>
 
+    <!-- 상품 등록 구역 -->
     <div class="add-form">
         <div class="form-row">
             <input type="text" id="itemName" placeholder="상품명 (예: 우유)" autocomplete="off">
@@ -187,6 +189,7 @@
         <button class="add-btn" onclick="addItem()">상품 등록하기</button>
     </div>
 
+    <!-- 합계 금액 창 -->
     <div class="total-area">
         <div class="total-info">
             <div class="total-left">
@@ -198,6 +201,7 @@
         <div class="budget-warning" id="budgetWarning">⚠️ 2만 원 초과! 물건을 조정해주세요!</div>
     </div>
 
+    <!-- 상품 리스트 구역 -->
     <div class="item-list" id="itemList"></div>
 
     <script>
@@ -217,7 +221,15 @@
             return item;
         });
 
+        // 가나다순(오름차순)으로 정렬하는 함수
+        function sortItems() {
+            items.sort((a, b) => a.name.localeCompare(b.name, 'ko'));
+        }
+
         function render() {
+            // 그리기 전에 항상 정렬 수행
+            sortItems();
+
             const itemList = document.getElementById('itemList');
             itemList.innerHTML = '';
 
