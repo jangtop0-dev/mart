@@ -12,59 +12,22 @@
             --bg-color: #f9f9f9;
         }
         * { box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
-        body { margin: 0; padding: 15px; background-color: var(--bg-color); color: #333; padding-bottom: 120px; }
+        body { margin: 0; padding: 15px; background-color: var(--bg-color); color: #333; }
         
-        h2 { text-align: center; margin: 10px 0 20px 0; font-size: 1.4rem; color: #111; }
-        
-        /* 고정 하단바 (합계 금액 표시) */
-        .total-bar {
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            background: white;
-            padding: 15px 20px;
-            box-shadow: 0 -3px 10px rgba(0,0,0,0.1);
-            display: flex;
-            flex-direction: column;
-            gap: 5px;
-            z-index: 100;
-        }
-        .total-info {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        .total-label { font-size: 1.1rem; font-weight: bold; }
-        .total-amount { font-size: 1.6rem; font-weight: 800; color: var(--primary-color); }
-        .budget-warning {
-            display: none;
-            text-align: center;
-            font-size: 0.9rem;
-            font-weight: bold;
-            color: white;
-            background-color: var(--danger-color);
-            padding: 6px;
-            border-radius: 5px;
-            margin-top: 5px;
-            animation: blink 1s infinite alternate;
-        }
-        @keyframes blink {
-            from { opacity: 0.8; }
-            to { opacity: 1; }
-        }
+        h2 { text-align: center; margin: 10px 0 15px 0; font-size: 1.4rem; color: #111; }
         
         /* 상품 등록 폼 */
         .add-form {
             background: white;
             padding: 15px;
             border-radius: 10px;
-            margin-bottom: 20px;
+            margin-bottom: 15px;
             box-shadow: 0 2px 5px rgba(0,0,0,0.05);
         }
+        /* 입력란 절반씩 배치 */
         .form-row { display: flex; gap: 8px; margin-bottom: 8px; }
         .form-row input {
-            flex: 1;
+            width: 50%; /* 반반씩 할당 */
             padding: 12px;
             border: 1px solid #ddd;
             border-radius: 6px;
@@ -84,11 +47,47 @@
             cursor: pointer;
         }
         
+        /* 등록 버튼 바로 밑으로 이동한 합계 표시창 */
+        .total-area {
+            background: white;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+            border: 2px solid #eaeaea;
+        }
+        .total-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .total-label { font-size: 1.1rem; font-weight: bold; }
+        .total-amount { font-size: 1.5rem; font-weight: 800; color: var(--primary-color); }
+        .budget-warning {
+            display: none;
+            text-align: center;
+            font-size: 0.9rem;
+            font-weight: bold;
+            color: white;
+            background-color: var(--danger-color);
+            padding: 6px;
+            border-radius: 5px;
+            margin-top: 5px;
+            animation: blink 1s infinite alternate;
+        }
+        @keyframes blink {
+            from { opacity: 0.8; }
+            to { opacity: 1; }
+        }
+        
         /* 상품 리스트 */
         .item-list { display: flex; flex-direction: column; gap: 10px; }
         .item-card {
             background: white;
-            padding: 12px 15px;
+            padding: 12px;
             border-radius: 8px;
             display: flex;
             align-items: center;
@@ -96,48 +95,51 @@
             box-shadow: 0 1px 4px rgba(0,0,0,0.05);
             transition: background-color 0.2s;
         }
-        .item-card.checked {
+        /* 구매 중인 상품 (수량이 1 이상인 카드) */
+        .item-card.active {
             background-color: #e8f5e9;
             border-left: 4px solid var(--primary-color);
         }
-        .item-left {
+        
+        /* 수량 조절기 (- 0 +) */
+        .quantity-controller {
             display: flex;
             align-items: center;
-            gap: 12px;
-            flex: 1;
-            cursor: pointer;
+            gap: 8px;
+            margin-right: 10px;
         }
-        /* 터치하기 편한 큰 체크박스 */
-        .custom-checkbox {
-            width: 26px;
-            height: 26px;
-            border: 2px solid #ccc;
+        .qty-btn {
+            width: 32px;
+            height: 32px;
+            border: 1px solid #ccc;
+            background-color: #f1f1f1;
+            font-size: 1.2rem;
+            font-weight: bold;
             border-radius: 6px;
+            cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
+            user-select: none;
+        }
+        .qty-btn:active { background-color: #ddd; }
+        .qty-val {
+            font-size: 1.1rem;
             font-weight: bold;
-            color: white;
-            transition: 0.1s;
+            min-width: 20px;
+            text-align: center;
         }
-        .item-card.checked .custom-checkbox {
-            background-color: var(--primary-color);
-            border-color: var(--primary-color);
-        }
-        .item-card.checked .custom-checkbox::after {
-            content: "✓";
-            font-size: 16px;
-        }
-        .item-info { display: flex; flex-direction: column; }
-        .item-name { font-size: 1.1rem; font-weight: 600; }
-        .item-price { font-size: 0.95rem; color: #666; margin-top: 2px; }
         
-        /* 액션 버튼 (수정, 삭제) */
-        .item-actions { display: flex; gap: 5px; }
+        .item-info { display: flex; flex-direction: column; flex: 1; min-width: 0; }
+        .item-name { font-size: 1.05rem; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .item-price { font-size: 0.9rem; color: #666; margin-top: 2px; }
+        
+        /* 수정/삭제 버튼 공간 */
+        .item-actions { display: flex; gap: 4px; }
         .action-btn {
             border: none;
-            padding: 8px 12px;
-            font-size: 0.85rem;
+            padding: 8px 10px;
+            font-size: 0.8rem;
             border-radius: 4px;
             cursor: pointer;
             font-weight: bold;
@@ -159,11 +161,8 @@
         <button class="add-btn" onclick="addItem()">상품 등록하기</button>
     </div>
 
-    <!-- 상품 리스트 구역 -->
-    <div class="item-list" id="itemList"></div>
-
-    <!-- 하단 고정 합계 창 -->
-    <div class="total-bar">
+    <!-- 등록 버튼 바로 밑으로 올라온 합계 금액 창 -->
+    <div class="total-area">
         <div class="total-info">
             <span class="total-label">선택한 합계:</span>
             <span class="total-amount" id="totalAmount">0원</span>
@@ -171,35 +170,53 @@
         <div class="budget-warning" id="budgetWarning">⚠️ 2만 원 초과! 물건을 조정해주세요!</div>
     </div>
 
+    <!-- 상품 리스트 구역 -->
+    <div class="item-list" id="itemList"></div>
+
     <script>
-        // 기본 상품 예시 데이터 (처음 실행 시 표시됨)
+        // 기본 예시 데이터 (처음 시작 시)
         const defaultItems = [
-            { id: 1, name: "우유 1L", price: 2900, checked: false },
-            { id: 2, name: "계란 1판", price: 6900, checked: false },
-            { id: 3, name: "두부 1모", price: 1800, checked: false },
-            { id: 4, name: "사과 1봉지", price: 8500, checked: false }
+            { id: 1, name: "우유 1L", price: 2900, count: 0 },
+            { id: 2, name: "계란 1판", price: 6900, count: 0 },
+            { id: 3, name: "두부 1모", price: 1800, count: 0 },
+            { id: 4, name: "사과 1봉지", price: 8500, count: 0 }
         ];
 
-        // 로컬스토리지에서 데이터를 읽어오거나 없으면 기본 데이터 사용
-        let items = JSON.parse(localStorage.getItem('grocery_items')) || defaultItems;
+        // 로컬스토리지 복구 시 구버전 checked 속성이 있으면 count: 0 으로 보정
+        let rawItems = JSON.parse(localStorage.getItem('grocery_items')) || defaultItems;
+        let items = rawItems.map(item => {
+            if (item.count === undefined) {
+                item.count = item.checked ? 1 : 0;
+                delete item.checked;
+            }
+            return item;
+        });
 
-        // 화면 그리기
+        // 화면 갱신
         function render() {
             const itemList = document.getElementById('itemList');
             itemList.innerHTML = '';
 
             items.forEach(item => {
                 const card = document.createElement('div');
-                card.className = `item-card ${item.checked ? 'checked' : ''}`;
+                // 수량이 1 이상이면 active 클래스 적용하여 연초록색으로 표시
+                card.className = `item-card ${item.count > 0 ? 'active' : ''}`;
                 
                 card.innerHTML = `
-                    <div class="item-left" onclick="toggleCheck(${item.id})">
-                        <div class="custom-checkbox"></div>
-                        <div class="item-info">
-                            <span class="item-name">${item.name}</span>
-                            <span class="item-price">${item.price.toLocaleString()}원</span>
-                        </div>
+                    <!-- 수량 조절기 -->
+                    <div class="quantity-controller">
+                        <div class="qty-btn" onclick="changeCount(${item.id}, -1)">-</div>
+                        <div class="qty-val">${item.count}</div>
+                        <div class="qty-btn" onclick="changeCount(${item.id}, 1)">+</div>
                     </div>
+                    
+                    <!-- 상품명 & 가격 -->
+                    <div class="item-info">
+                        <span class="item-name">${item.name}</span>
+                        <span class="item-price">${item.price.toLocaleString()}원</span>
+                    </div>
+                    
+                    <!-- 관리 버튼 -->
                     <div class="item-actions">
                         <button class="action-btn edit-btn" onclick="editItem(${item.id})">수정</button>
                         <button class="action-btn delete-btn" onclick="deleteItem(${item.id})">삭제</button>
@@ -212,18 +229,20 @@
             saveData();
         }
 
-        // 체크 상태 토글
-        function toggleCheck(id) {
+        // 수량 증감 기능 (+ / -)
+        function changeCount(id, delta) {
             items = items.map(item => {
                 if (item.id === id) {
-                    return { ...item, checked: !item.checked };
+                    let newCount = item.count + delta;
+                    if (newCount < 0) newCount = 0; // 0 미만으로 내려가지 않음
+                    return { ...item, count: newCount };
                 }
                 return item;
             });
             render();
         }
 
-        // 상품 등록
+        // 새 상품 추가
         function addItem() {
             const nameInput = document.getElementById('itemName');
             const priceInput = document.getElementById('itemPrice');
@@ -240,10 +259,10 @@
             }
 
             const newItem = {
-                id: Date.now(), // 고유 ID 생성
+                id: Date.now(),
                 name: name,
                 price: price,
-                checked: false
+                count: 0 // 최초 등록 시 기본 수량 0
             };
 
             items.push(newItem);
@@ -252,13 +271,13 @@
             render();
         }
 
-        // 상품 가격 및 이름 수정
+        // 가격 및 상품명 변경
         function editItem(id) {
             const item = items.find(i => i.id === id);
             if (!item) return;
 
             const newName = prompt('상품 이름을 수정하세요:', item.name);
-            if (newName === null) return; // 취소 클릭 시
+            if (newName === null) return;
 
             const newPriceStr = prompt('가격을 수정하세요 (숫자만 입력):', item.price);
             if (newPriceStr === null) return;
@@ -274,7 +293,7 @@
             render();
         }
 
-        // 상품 삭제
+        // 리스트에서 상품 완전히 삭제
         function deleteItem(id) {
             if (confirm('이 상품을 삭제하시겠습니까?')) {
                 items = items.filter(item => item.id !== id);
@@ -282,18 +301,15 @@
             }
         }
 
-        // 합계 계산 및 2만원 제한 감지
+        // 개별 수량을 곱하여 합계 구하고 예산 2만 원 감지
         function calculateTotal() {
-            const total = items
-                .filter(item => item.checked)
-                .reduce((sum, item) => sum + item.price, 0);
+            const total = items.reduce((sum, item) => sum + (item.price * item.count), 0);
 
             const totalAmountEl = document.getElementById('totalAmount');
             const warningEl = document.getElementById('budgetWarning');
 
             totalAmountEl.textContent = `${total.toLocaleString()}원`;
 
-            // 20,000원 기준값 처리
             if (total > 20000) {
                 totalAmountEl.style.color = 'var(--danger-color)';
                 warningEl.style.display = 'block';
@@ -303,12 +319,12 @@
             }
         }
 
-        // 브라우저 내부(LocalStorage)에 데이터 반영구 저장
+        // 로컬 브라우저 저장
         function saveData() {
             localStorage.setItem('grocery_items', JSON.stringify(items));
         }
 
-        // 첫 페이지 로드 시 실행
+        // 앱 실행
         render();
     </script>
 </body>
